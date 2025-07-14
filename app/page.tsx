@@ -10,18 +10,11 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, MapPin, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import bnWeatherTranslations from '@/lib/bn-translation';
 
 const SUPPORTED_LANGUAGES = [
   { code: 'en', name: 'English' },
-  { code: 'es', name: 'Español' },
-  { code: 'fr', name: 'Français' },
-  { code: 'de', name: 'Deutsch' },
-  { code: 'it', name: 'Italiano' },
-  { code: 'pt', name: 'Português' },
-  { code: 'ru', name: 'Русский' },
-  { code: 'ja', name: '日本語' },
-  { code: 'ko', name: '한국어' },
-  { code: 'zh', name: '中文' },
+  { code: 'bn', name: 'বাংলা' },
 ];
 
 export default function Home() {
@@ -32,25 +25,12 @@ export default function Home() {
   const [location, setLocation] = useState('');
   const [translatedData, setTranslatedData] = useState<WeatherData | null>(null);
 
+  // Set Bengali as default if country is Bangladesh
   useEffect(() => {
-    // Get user's current location on component mount
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          handleFetchWeatherByCoordinates(latitude, longitude);
-        },
-        (error) => {
-          if (error.code === error.PERMISSION_DENIED) {
-            console.info('Geolocation access denied by user');
-          } else {
-            console.error('Geolocation error:', error);
-          }
-          setError('Unable to get your location. Please search for a city.');
-        }
-      );
+    if (weatherData && weatherData.location.includes('Bangladesh')) {
+      setSelectedLanguage('bn');
     }
-  }, []);
+  }, [weatherData]);
 
   useEffect(() => {
     if (weatherData && selectedLanguage !== 'en') {
@@ -94,48 +74,11 @@ export default function Home() {
 
   const translateWeatherData = async (data: WeatherData, targetLanguage: string) => {
     try {
-      // For demo purposes, create mock translations
-      const translations: Record<string, Record<string, string>> = {
-        es: {
-          'Clear': 'Despejado',
-          'Sunny': 'Soleado',
-          'Partly cloudy': 'Parcialmente nublado',
-          'Cloudy': 'Nublado',
-          'Overcast': 'Nublado',
-          'Mist': 'Neblina',
-          'Patchy rain possible': 'Posible lluvia dispersa',
-          'Light rain': 'Lluvia ligera',
-          'Moderate rain': 'Lluvia moderada',
-          'Heavy rain': 'Lluvia intensa'
-        },
-        fr: {
-          'Clear': 'Dégagé',
-          'Sunny': 'Ensoleillé',
-          'Partly cloudy': 'Partiellement nuageux',
-          'Cloudy': 'Nuageux',
-          'Overcast': 'Couvert',
-          'Mist': 'Brume',
-          'Patchy rain possible': 'Pluie éparse possible',
-          'Light rain': 'Pluie légère',
-          'Moderate rain': 'Pluie modérée',
-          'Heavy rain': 'Pluie forte'
-        },
-        de: {
-          'Clear': 'Klar',
-          'Sunny': 'Sonnig',
-          'Partly cloudy': 'Teilweise bewölkt',
-          'Cloudy': 'Bewölkt',
-          'Overcast': 'Bedeckt',
-          'Mist': 'Nebel',
-          'Patchy rain possible': 'Vereinzelt Regen möglich',
-          'Light rain': 'Leichter Regen',
-          'Moderate rain': 'Mäßiger Regen',
-          'Heavy rain': 'Starker Regen'
-        }
-      };
-
       const translateText = (text: string) => {
-        return translations[targetLanguage]?.[text] || text;
+        if (targetLanguage === 'bn') {
+          return bnWeatherTranslations[text] || text;
+        }
+        return text;
       };
 
       const translated: WeatherData = {
@@ -186,10 +129,10 @@ export default function Home() {
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold text-white mb-2">
-              Weather Forecast
+              {selectedLanguage === 'bn' ? bnWeatherTranslations['Weather Forecast'] : 'Weather Forecast'}
             </h1>
             <p className="text-white/80 text-lg">
-              Get real-time weather updates with hourly forecasts
+              {selectedLanguage === 'bn' ? bnWeatherTranslations['Get real-time weather updates with hourly forecasts'] : 'Get real-time weather updates with hourly forecasts'}
             </p>
           </div>
 
@@ -199,7 +142,7 @@ export default function Home() {
               <CardHeader className="pb-3">
                 <CardTitle className="text-white text-sm font-medium">
                   <MapPin className="w-4 h-4 inline mr-2" />
-                  Location
+                  {selectedLanguage === 'bn' ? bnWeatherTranslations['Location'] : 'Location'}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -210,12 +153,11 @@ export default function Home() {
             <Card className="backdrop-blur-sm bg-white/10 border-white/20">
               <CardHeader className="pb-3">
                 <CardTitle className="text-white text-sm font-medium">
-                  Language
+                  {selectedLanguage === 'bn' ? bnWeatherTranslations['Language'] : 'Language'}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <LanguageSelector
-                  languages={SUPPORTED_LANGUAGES}
                   selectedLanguage={selectedLanguage}
                   onLanguageChange={setSelectedLanguage}
                 />
@@ -225,7 +167,7 @@ export default function Home() {
             <Card className="backdrop-blur-sm bg-white/10 border-white/20">
               <CardHeader className="pb-3">
                 <CardTitle className="text-white text-sm font-medium">
-                  Speech
+                  {selectedLanguage === 'bn' ? bnWeatherTranslations['Speech'] : 'Speech'}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -241,14 +183,14 @@ export default function Home() {
           {loading && (
             <div className="flex justify-center items-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-white" />
-              <span className="ml-3 text-white text-lg">Loading weather data...</span>
+              <span className="ml-3 text-white text-lg">{selectedLanguage === 'bn' ? bnWeatherTranslations['Loading weather data...'] : 'Loading weather data...'}</span>
             </div>
           )}
 
           {error && (
             <Alert className="mb-6 bg-red-500/10 border-red-500/20 text-red-100">
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription>{selectedLanguage === 'bn' ? bnWeatherTranslations[error] || error : error}</AlertDescription>
             </Alert>
           )}
 
