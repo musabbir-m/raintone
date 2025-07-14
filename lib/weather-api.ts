@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 interface WeatherApiCurrentResponse {
   location: {
     name: string;
@@ -230,21 +232,19 @@ export async function fetchWeatherByCoordinates(lat: number, lon: number): Promi
 
   try {
     // Fetch 4-day forecast (today + 3 days) with hourly data
-    const response = await fetch(
-      `${BASE_URL}/forecast.json?key=${API_KEY}&q=${lat},${lon}&days=4&aqi=no&alerts=no`
+    const response = await axios.get(
+      `${BASE_URL}/forecast.json`, {
+        params: {
+          key: API_KEY,
+          q: `${lat},${lon}`,
+          days: 4,
+          aqi: 'no',
+          alerts: 'no'
+        }
+      }
     );
 
-    if (!response.ok) {
-      if (response.status === 401) {
-        throw new Error('Invalid API key. Please check your WeatherAPI.com API key.');
-      }
-      if (response.status === 400) {
-        throw new Error('Invalid location coordinates.');
-      }
-      throw new Error(`Weather API error: ${response.status}`);
-    }
-
-    const data: WeatherApiForecastResponse = await response.json();
+    const data: WeatherApiForecastResponse = response.data;
 
     // Get today's date in YYYY-MM-DD format
     const today = new Date().toISOString().split('T')[0];
@@ -309,7 +309,16 @@ export async function fetchWeatherByCoordinates(lat: number, lon: number): Promi
     };
 
     return weatherData;
-  } catch (error) {
+  } catch (error: any) {
+    if (axios.isAxiosError(error) && error.response) {
+      if (error.response.status === 401) {
+        throw new Error('Invalid API key. Please check your WeatherAPI.com API key.');
+      }
+      if (error.response.status === 400) {
+        throw new Error('Invalid location coordinates.');
+      }
+      throw new Error(`Weather API error: ${error.response.status}`);
+    }
     console.error('Error fetching weather data:', error);
     throw error;
   }
@@ -322,21 +331,19 @@ export async function fetchWeatherByCity(cityName: string): Promise<WeatherData>
 
   try {
     // WeatherAPI.com can handle city names directly
-    const response = await fetch(
-      `${BASE_URL}/forecast.json?key=${API_KEY}&q=${encodeURIComponent(cityName)}&days=4&aqi=no&alerts=no`
+    const response = await axios.get(
+      `${BASE_URL}/forecast.json`, {
+        params: {
+          key: API_KEY,
+          q: cityName,
+          days: 4,
+          aqi: 'no',
+          alerts: 'no'
+        }
+      }
     );
 
-    if (!response.ok) {
-      if (response.status === 401) {
-        throw new Error('Invalid API key. Please check your WeatherAPI.com API key.');
-      }
-      if (response.status === 400) {
-        throw new Error(`City "${cityName}" not found. Please check the spelling and try again.`);
-      }
-      throw new Error(`Weather API error: ${response.status}`);
-    }
-
-    const data: WeatherApiForecastResponse = await response.json();
+    const data: WeatherApiForecastResponse = response.data;
 
     // Use the same transformation logic as fetchWeatherByCoordinates
     const today = new Date().toISOString().split('T')[0];
@@ -397,7 +404,16 @@ export async function fetchWeatherByCity(cityName: string): Promise<WeatherData>
     };
 
     return weatherData;
-  } catch (error) {
+  } catch (error: any) {
+    if (axios.isAxiosError(error) && error.response) {
+      if (error.response.status === 401) {
+        throw new Error('Invalid API key. Please check your WeatherAPI.com API key.');
+      }
+      if (error.response.status === 400) {
+        throw new Error(`City "${cityName}" not found. Please check the spelling and try again.`);
+      }
+      throw new Error(`Weather API error: ${error.response.status}`);
+    }
     console.error('Error fetching weather by city:', error);
     throw error;
   }
